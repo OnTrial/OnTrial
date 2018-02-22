@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:util="http://www.springframework.org/schema/util" xmlns:jpa="http://www.springframework.org/schema/data/jpa"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans   
+       classpath:/org/springframework/beans/factory/xml/spring-beans-4.0.xsd  
+       http://www.springframework.org/schema/tx   
+       classpath:/org/springframework/transaction/config/spring-tx-4.0.xsd     
+       http://www.springframework.org/schema/context   
+       classpath:/org/springframework/context/config/spring-context-4.0.xsd
+       http://www.springframework.org/schema/util 
+       classpath:/org/springframework/beans/factory/xml/spring-util-4.0.xsd  
+       http://www.springframework.org/schema/data/jpa 
+       classpath:/org/springframework/data/jpa/repository/config/spring-jpa-1.1.xsd">
+
+	<bean
+		class="org.springframework.orm.jpa.support.PersistenceAnnotationBeanPostProcessor" />
+
+	<bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource"
+		destroy-method="close">
+		<property name="driverClass" value="${general.dbDriver}" />
+		<property name="jdbcUrl" value="${general.dbUrl}" />
+		<property name="user" value="${general.dbUsername}" />
+		<property name="password" value="${general.dbPassword}" />
+		<property name="initialPoolSize">
+			<value>5</value>
+		</property>
+		<property name="minPoolSize">
+			<value>3</value>
+		</property>
+		<property name="maxPoolSize">
+			<value>50</value>
+		</property>
+		<property name="idleConnectionTestPeriod">
+			<value>200</value>
+		</property>
+		<property name="acquireIncrement">
+			<value>3</value>
+		</property>
+		<property name="numHelperThreads">
+			<value>3</value>
+		</property>
+	</bean>
+
+
+	<bean id="entityManagerFactory"
+		class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+		
+		<property name="persistenceXmlLocation" value="classpath:META-INF/containerEntity.xml" />
+		<property name="dataSource" ref="dataSource" />
+		<property name="persistenceUnitName" value="entity" />
+		<property name="jpaVendorAdapter" ref="hibernateVendor" />
+		<property name="jpaPropertyMap" ref="jpaPropertyMap" />
+	</bean>
+
+	<util:map id="jpaPropertyMap">
+		<entry key="hibernate.dialect" value="${general.dbDialect}" />
+		<entry key="hibernate.hbm2ddl.auto" value="update" />
+		<entry key="hibernate.cache.use_second_level_cache" value="false" />
+	</util:map>
+
+	<bean id="hibernateVendor"
+		class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter">
+		<property name="database" value="${general.db}" />
+		<property name="showSql" value="true" />
+		<property name="generateDdl" value="true" />
+		<property name="databasePlatform" value="${general.dbDialect}" />
+	</bean>
+	<bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
+		<property name="entityManagerFactory" ref="entityManagerFactory" />
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+
+	<bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+
+	<context:annotation-config />
+
+	<tx:annotation-driven mode="aspectj" />
+
+	<tx:annotation-driven transaction-manager="transactionManager" />
+
+	<bean
+		class="org.springframework.dao.annotation.PersistenceExceptionTranslationPostProcessor" />
+
+	<jpa:repositories base-package="org.developer.wwb" />
+
+</beans>
